@@ -27,4 +27,5 @@ class DcosCluster implements Cluster, Serializable {
   String accountName
   Set<DcosServerGroup> serverGroups = Collections.synchronizedSet(new HashSet<DcosServerGroup>())
   Set<LoadBalancer> loadBalancers = Collections.synchronizedSet(new HashSet<DcosLoadBalancer>())
+  Set<String> secrets
 }

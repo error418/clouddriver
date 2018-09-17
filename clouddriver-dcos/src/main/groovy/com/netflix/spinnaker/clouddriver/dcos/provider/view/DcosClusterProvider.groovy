@@ -144,10 +144,19 @@ class DcosClusterProvider implements ClusterProvider<DcosCluster> {
     clusters.groupBy { it.accountName }.collectEntries { k, v -> [k, new HashSet(v)] }
   }
 
+  private Map<String, Collection<String>> getSecretsByCluster() {
+    Collection<CacheData> secretCacheData = getAllMatchingKeyPattern(cacheView, Keys.Namespace.SECRETS.ns, "${dcosCloudProvider.id}:*")
+    Map<String, Collection<String>> secretsByCluster = [:].withDefault { key -> return [] }
+    secretCacheData.each {
+      secretsByCluster[Keys.parse(it.id).dcosCluster].add(objectMapper.convertValue(it.attributes.secretPath, String.class))
+    }
+    secretsByCluster
+  }
 
   def translateClusters(Collection<CacheData> clusterData, boolean includeDetails) {
     Map<String, DcosLoadBalancer> loadBalancers
     Map<String, Set<DcosServerGroup>> serverGroups
+    Map<String, Collection<String>> dcosSecrets
 
     if (includeDetails) {
       Collection<CacheData> allLoadBalancers = resolveRelationshipDataForCollection(cacheView, clusterData, Keys.Namespace.LOAD_BALANCERS.ns)
@@ -155,17 +164,18 @@ class DcosClusterProvider implements ClusterProvider<DcosCluster> {
                                                                                    RelationshipCacheFilter.include(Keys.Namespace.INSTANCES.ns, Keys.Namespace.LOAD_BALANCERS.ns))
       loadBalancers = translateLoadBalancers(allLoadBalancers)
       serverGroups = translateServerGroups(allServerGroups)
+      dcosSecrets = getSecretsByCluster()
     }
 
     Collection<DcosCluster> clusters = clusterData.collect {
-      createDcosCluster(it, loadBalancers, serverGroups, includeDetails)
+      createDcosCluster(it, loadBalancers, serverGroups, dcosSecrets, includeDetails)
     }
 
     clusters
   }
 
   static def createDcosCluster(CacheData clusterDataEntry, Map<String, DcosLoadBalancer> loadBalancers,
-                               Map<String, Set<DcosServerGroup>> serverGroups, boolean includeDetails) {
+                               Map<String, Set<DcosServerGroup>> serverGroups, Map<String, Collection<String>> dcosSecrets, boolean includeDetails) {
     Map<String, String> clusterKey = Keys.parse(clusterDataEntry.id)
 
     def cluster = new DcosCluster()
@@ -176,6 +186,7 @@ class DcosClusterProvider implements ClusterProvider<DcosCluster> {
         loadBalancers.get(it)
       }
       cluster.serverGroups = serverGroups[cluster.name]?.findAll { it.account == cluster.accountName } ?: []
+      cluster.secrets = dcosSecrets[cluster.name]
     } else {
       cluster.loadBalancers = clusterDataEntry.relationships[Keys.Namespace.LOAD_BALANCERS.ns]?.collect { loadBalancerKey ->
         Map parts = Keys.parse(loadBalancerKey)
