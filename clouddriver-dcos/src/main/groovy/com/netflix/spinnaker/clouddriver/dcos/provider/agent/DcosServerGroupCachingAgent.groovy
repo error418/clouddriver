@@ -39,7 +39,7 @@ import com.netflix.spinnaker.clouddriver.dcos.security.DcosAccountCredentials
 import groovy.util.logging.Slf4j
 import mesosphere.dcos.client.DCOS
 import mesosphere.marathon.client.model.v2.App
-import mesosphere.marathon.client.model.v2.GetAppNamespaceResponse
+import mesosphere.marathon.client.model.v2.GetAppsResponse
 
 import static com.netflix.spinnaker.cats.agent.AgentDataType.Authority.AUTHORITATIVE
 import static com.netflix.spinnaker.cats.agent.AgentDataType.Authority.INFORMATIVE
@@ -267,13 +267,9 @@ class DcosServerGroupCachingAgent implements CachingAgent, OnDemandAgent, DcosCl
   }
 
   private List<DcosServerGroup> loadServerGroups() {
-    final Optional<GetAppNamespaceResponse> response = dcosClient.maybeApps("", ['app.tasks', 'app.deployments'])
-    if (!response.isPresent()) {
-      log.info("Unable to retrieve DC/OS applications from the root namespace. No server groups will be cached.")
-      return []
-    }
+    final GetAppsResponse response = dcosClient.getApps(['app.tasks', 'app.deployments'])
 
-    response.get().apps.findAll {
+    response.apps.findAll {
       def id = DcosSpinnakerAppId.parse(it.id)
       !it.labels?.containsKey("SPINNAKER_LOAD_BALANCER") && id.isPresent() && accountNames.contains(id.get().account)
     }.collect {
@@ -344,7 +340,7 @@ class DcosServerGroupCachingAgent implements CachingAgent, OnDemandAgent, DcosCl
           relationships[Keys.Namespace.LOAD_BALANCERS.ns].addAll(loadBalancerKeys)
         }
 
-        app.tasks.forEach { task ->
+        app.tasks?.forEach { task ->
           final String safeGroup = DcosSpinnakerAppId.parse(task.getAppId()).get().getSafeGroup()
           def groupName = clusterName
           if (!safeGroup.isEmpty()) {

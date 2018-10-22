@@ -78,7 +78,7 @@ class DcosSecretsCachingAgent implements CachingAgent {
 
     def secrets = []
     try {
-      secrets = dcosClient.listSecrets(clusterCredentials.secretStore, "").secrets
+      secrets = dcosClient.listSecrets(clusterCredentials.secretStore, credentials.account).secrets
     } catch (DCOSException e) {
       log.error("Unable to cache secrets for cluster=[${clusterName}] using serviceAccount=[${clusterCredentials.dcosConfig.credentials.uid}]", e)
     }

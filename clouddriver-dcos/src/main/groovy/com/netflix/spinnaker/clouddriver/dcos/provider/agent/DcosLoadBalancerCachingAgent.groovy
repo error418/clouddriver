@@ -37,7 +37,7 @@ import com.netflix.spinnaker.clouddriver.dcos.security.DcosAccountCredentials
 import groovy.util.logging.Slf4j
 import mesosphere.dcos.client.DCOS
 import mesosphere.marathon.client.model.v2.App
-import mesosphere.marathon.client.model.v2.GetAppNamespaceResponse
+import mesosphere.marathon.client.model.v2.GetAppsResponse
 
 import static com.netflix.spinnaker.cats.agent.AgentDataType.Authority.AUTHORITATIVE
 
@@ -243,13 +243,9 @@ class DcosLoadBalancerCachingAgent implements CachingAgent, OnDemandAgent, DcosC
 
   private List<App> loadLoadBalancers() {
     // Currently not supporting anything but account global load balancers - no associated region.
-    final Optional<GetAppNamespaceResponse> response = dcosClient.maybeApps("")
-    if (!response.isPresent()) {
-      log.info("Unable to retrieve DC/OS applications from the root namespace. No load balancers will be cached.")
-      return []
-    }
+    final GetAppsResponse response = dcosClient.getApps()
 
-    return response.get().apps.findAll {
+    return response.apps?.findAll {
       it.labels?.containsKey("SPINNAKER_LOAD_BALANCER") && DcosSpinnakerLbId.parse(it.id).isPresent()
     }
   }
