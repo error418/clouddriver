@@ -267,7 +267,7 @@ class DcosServerGroupCachingAgent implements CachingAgent, OnDemandAgent, DcosCl
   }
 
   private List<DcosServerGroup> loadServerGroups() {
-    final GetAppsResponse response = dcosClient.getApps(['app.tasks', 'app.deployments'])
+    final GetAppsResponse response = dcosClient.getApps(['embed': ['app.tasks', 'app.deployments']])
 
     response.apps.findAll {
       def id = DcosSpinnakerAppId.parse(it.id)
