@@ -34,6 +34,7 @@ import mesosphere.dcos.client.Config
 import mesosphere.dcos.client.DCOS
 import mesosphere.dcos.client.model.DCOSAuthCredentials
 import mesosphere.marathon.client.model.v2.App
+import mesosphere.marathon.client.model.v2.GetAppsResponse
 import mesosphere.marathon.client.model.v2.GetAppNamespaceResponse
 import spock.lang.Specification
 
@@ -139,7 +140,7 @@ class DcosLoadBalancerCachingAgentSpec extends BaseSpecification {
       getLabels() >> ["SPINNAKER_LOAD_BALANCER": LOAD_BALANCER_NAME, "tag": "retrieved"]
     }
 
-    GetAppNamespaceResponse appsInAccount = Mock(GetAppNamespaceResponse) {
+    GetAppsResponse appsInAccount = Mock(GetAppsResponse) {
       getApps() >> [retrievedLoadBalancer]
     }
 
@@ -151,7 +152,7 @@ class DcosLoadBalancerCachingAgentSpec extends BaseSpecification {
               "processedCount": 0]
     }
     providerCache.getAll(Keys.Namespace.ON_DEMAND.ns, [loadBalancerKey]) >> [cacheData]
-    dcosClient.maybeApps("") >> Optional.of(appsInAccount)
+    dcosClient.getApps() >> appsInAccount
 
     when:
     final result = subject.loadData(providerCache)
@@ -177,7 +178,7 @@ class DcosLoadBalancerCachingAgentSpec extends BaseSpecification {
       getLabels() >> ["SPINNAKER_LOAD_BALANCER": LOAD_BALANCER_NAME, "tag": "retrieved"]
     }
 
-    GetAppNamespaceResponse appsInAccount = Mock(GetAppNamespaceResponse) {
+    GetAppsResponse appsInAccount = Mock(GetAppsResponse) {
       getApps() >> [retrievedLoadBalancer]
     }
 
@@ -189,7 +190,7 @@ class DcosLoadBalancerCachingAgentSpec extends BaseSpecification {
               "processedCount": 1]
     }
     providerCache.getAll(Keys.Namespace.ON_DEMAND.ns, [loadBalancerKey]) >> [cacheData]
-    dcosClient.maybeApps("") >> Optional.of(appsInAccount)
+    dcosClient.getApps() >> appsInAccount
 
     when:
     final result = subject.loadData(providerCache)
@@ -207,11 +208,11 @@ class DcosLoadBalancerCachingAgentSpec extends BaseSpecification {
       getLabels() >> ["SPINNAKER_LOAD_BALANCER": LOAD_BALANCER_NAME]
     }
 
-    GetAppNamespaceResponse appsInAccount = Mock(GetAppNamespaceResponse) {
+    GetAppsResponse appsInAccount = Mock(GetAppsResponse) {
       getApps() >> [loadBalancer]
     }
 
-    dcosClient.maybeApps("") >> Optional.of(appsInAccount)
+    dcosClient.getApps() >> appsInAccount
     def providerCacheMock = Mock(ProviderCache)
     providerCacheMock.getAll(_, _) >> []
     when:

@@ -36,7 +36,7 @@ import mesosphere.dcos.client.DCOS
 import mesosphere.dcos.client.model.DCOSAuthCredentials
 import mesosphere.marathon.client.model.v2.App
 import mesosphere.marathon.client.model.v2.Container
-import mesosphere.marathon.client.model.v2.GetAppNamespaceResponse
+import mesosphere.marathon.client.model.v2.GetAppsResponse
 import mesosphere.marathon.client.model.v2.GetAppResponse
 import mesosphere.marathon.client.model.v2.Task
 import mesosphere.marathon.client.model.v2.VersionedApp
@@ -174,7 +174,7 @@ class DcosServerGroupCachingAgentSpec extends BaseSpecification {
 
   void "Newer On-demand cache items should not be replaced by an older version"() {
     setup:
-    GetAppNamespaceResponse appsInAccount = Mock(GetAppNamespaceResponse) {
+    GetAppsResponse appsInAccount = Mock(GetAppsResponse) {
       getApps() >> [
         Mock(VersionedApp) {
           getContainer() >> container
@@ -198,7 +198,7 @@ class DcosServerGroupCachingAgentSpec extends BaseSpecification {
         "processedCount": 0]
     }
     providerCache.getAll(Keys.Namespace.ON_DEMAND.ns, [serverGroupKey]) >> [cacheData]
-    dcosClient.maybeApps("", ['app.tasks', 'app.deployments']) >> Optional.of(appsInAccount)
+    dcosClient.getApps(['embed': ['app.tasks', 'app.deployments']]) >> appsInAccount
     when:
     final result = subject.loadData(providerCache)
     then:
@@ -210,7 +210,7 @@ class DcosServerGroupCachingAgentSpec extends BaseSpecification {
 
   void "Older on-demand cache items should be replaced by newer versions"() {
     setup:
-    GetAppNamespaceResponse appsInAccount = Mock(GetAppNamespaceResponse) {
+    GetAppsResponse appsInAccount = Mock(GetAppsResponse) {
       getApps() >> [
         Mock(VersionedApp) {
           getContainer() >> container
@@ -234,7 +234,7 @@ class DcosServerGroupCachingAgentSpec extends BaseSpecification {
         "processedCount": 1]
     }
     providerCache.getAll(Keys.Namespace.ON_DEMAND.ns, [serverGroupKey]) >> [cacheData]
-    dcosClient.maybeApps("", ['app.tasks', 'app.deployments']) >> Optional.of(appsInAccount)
+    dcosClient.getApps(['embed': ['app.tasks', 'app.deployments']]) >> appsInAccount
     when:
     final result = subject.loadData(providerCache)
     then:
@@ -245,7 +245,7 @@ class DcosServerGroupCachingAgentSpec extends BaseSpecification {
 
   void "Should cache marathon application and relationships"() {
     setup:
-    GetAppNamespaceResponse appsInAccount = Mock(GetAppNamespaceResponse) {
+    GetAppsResponse appsInAccount = Mock(GetAppsResponse) {
       getApps() >> [
         Mock(VersionedApp) {
           getContainer() >> container
@@ -261,7 +261,7 @@ class DcosServerGroupCachingAgentSpec extends BaseSpecification {
       ]
     }
 
-    dcosClient.maybeApps("", ['app.tasks', 'app.deployments']) >> Optional.of(appsInAccount)
+    dcosClient.getApps(['embed': ['app.tasks', 'app.deployments']]) >> appsInAccount
     def providerCacheMock = Mock(ProviderCache)
     providerCacheMock.getAll(_, _) >> []
     when:
@@ -306,11 +306,11 @@ class DcosServerGroupCachingAgentSpec extends BaseSpecification {
       ]
       getLabels() >> ["HAPROXY_GROUP": "${ACCOUNT}_${APP}-frontend"]
     }
-    GetAppNamespaceResponse appsInAccount = Mock(GetAppNamespaceResponse) {
+    GetAppsResponse appsInAccount = Mock(GetAppsResponse) {
       getApps() >> [validApp]
     }
 
-    dcosClient.maybeApps("", ['app.tasks', 'app.deployments']) >> Optional.of(appsInAccount)
+    dcosClient.getApps(['embed': ['app.tasks', 'app.deployments']]) >> appsInAccount
     dcosClient.getDeployments() >> []
     def providerCacheMock = Mock(ProviderCache)
 
@@ -346,11 +346,11 @@ class DcosServerGroupCachingAgentSpec extends BaseSpecification {
       getLabels() >> ["HAPROXY_GROUP": "${ACCOUNT}_${APP}-frontend"]
     }
 
-    GetAppNamespaceResponse appsInAccount = Mock(GetAppNamespaceResponse) {
+    GetAppsResponse appsInAccount = Mock(GetAppsResponse) {
       getApps() >> [validApp, invalidApp]
     }
 
-    dcosClient.maybeApps("", ['app.tasks', 'app.deployments']) >> Optional.of(appsInAccount)
+    dcosClient.getApps(['embed': ['app.tasks', 'app.deployments']]) >> appsInAccount
     dcosClient.getDeployments() >> []
     def providerCacheMock = Mock(ProviderCache)
 

@@ -58,7 +58,7 @@ class DcosSecretsCachingAgentSpec extends BaseSpecification {
       getSecrets() >> ["secret1", "secret2"]
     }
 
-    dcosClient.listSecrets(DEFAULT_SECRET_STORE,"") >> secretsResponse
+    dcosClient.listSecrets(DEFAULT_SECRET_STORE, credentials.account) >> secretsResponse
 
     def providerCacheMock = Mock(ProviderCache)
 
@@ -81,7 +81,7 @@ class DcosSecretsCachingAgentSpec extends BaseSpecification {
   void "Won't cache any secrets when the account does not have the privileges to load them"() {
     setup:
 
-    dcosClient.listSecrets(DEFAULT_SECRET_STORE,"") >> { throw new DCOSException(403, "error", "GET", "no privs") }
+    dcosClient.listSecrets(DEFAULT_SECRET_STORE, credentials.account) >> { throw new DCOSException(403, "error", "GET", "no privs") }
 
     def providerCacheMock = Mock(ProviderCache)
 
