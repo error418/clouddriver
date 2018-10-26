@@ -137,10 +137,10 @@ class DeployDcosServerGroupDescriptionToAppMapperSpec extends Specification {
         app.container.docker.forcePullImage == description.docker.forcePullImage
 
         def labels = [null,
-                      ["VIP_1":"/spinnaker/test/api-test-something-v000:8081"],
+                      ["VIP_1":"api-test-something-v000.test.spinnaker:8081"],
                       ["VIP_2":"vip_override:8082"],
                       ["label":"non_vip_label"],
-                      ["VIP_4":"/spinnaker/test/api-test-something-v000:8084", "VIP_10":"vip_override:8084"]]
+                      ["VIP_4":"api-test-something-v000.test.spinnaker:8084", "VIP_10":"vip_override:8084"]]
         app.container.docker.portMappings.size() == description.serviceEndpoints.size()
         [app.container.docker.portMappings, description.serviceEndpoints, labels].transpose().forEach({ appPortMapping, descriptionPortMapping, label ->
             assert appPortMapping.containerPort == descriptionPortMapping.port

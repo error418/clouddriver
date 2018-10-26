@@ -199,10 +199,15 @@ class DeployDcosServerGroupDescriptionToAppMapper {
     def parsedLabels = (Map<String, String>) serviceEndpoint.labels.clone()
 
     if (serviceEndpoint.loadBalanced && !parsedLabels.containsKey("VIP_${index}".toString())) {
-      parsedLabels.put("VIP_${index}".toString(), "${appId}:${serviceEndpoint.port}".toString())
+      parsedLabels.put("VIP_${index}".toString(), "${ convertAppIdToVip(appId) }:${serviceEndpoint.port}".toString())
     }
 
     parsedLabels ? parsedLabels : null
+  }
+
+  private
+  static String convertAppIdToVip(String appId) {
+    appId.split('/').findAll{ item -> item.trim() != ''}.reverse().join('.')
   }
 
   private
